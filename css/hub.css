@@ -221,6 +221,87 @@ body {
     50% { transform: translateX(8px) rotate(-180deg); }
 }
 
+/* 사다리 게임 아이콘 */
+.game-icon.ladder-game {
+    background: linear-gradient(135deg, #4ecdc4 0%, #009688 100%);
+    animation: ladderGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes ladderGlow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(78, 205, 196, 0.6);
+    }
+}
+
+.ladder-icon {
+    position: relative;
+    width: 80%;
+    height: 80%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ladder-line {
+    background: white;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ladder-line.vertical {
+    width: 4px;
+    height: 70%;
+    animation: ladderBounce 3s ease-in-out infinite;
+}
+
+.ladder-line.vertical:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.ladder-line.vertical:nth-child(3) {
+    animation-delay: 1s;
+}
+
+.ladder-line.horizontal {
+    position: absolute;
+    width: 50%;
+    height: 3px;
+    left: 25%;
+    animation: ladderSlide 2s ease-in-out infinite;
+}
+
+.ladder-line.horizontal:nth-child(4) {
+    top: 30%;
+}
+
+.ladder-line.horizontal:nth-child(5) {
+    bottom: 30%;
+    animation-delay: 1s;
+}
+
+@keyframes ladderBounce {
+    0%, 100% {
+        transform: scaleY(1);
+    }
+    50% {
+        transform: scaleY(1.1);
+    }
+}
+
+@keyframes ladderSlide {
+    0%, 100% {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scaleX(1.2);
+    }
+}
+
 /* 준비 중 게임 아이콘 */
 .game-icon.placeholder-game {
     background: linear-gradient(135deg, #a8a8a8 0%, #888888 100%);
