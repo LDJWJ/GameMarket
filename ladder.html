@@ -216,41 +216,64 @@
       }
     }
 
-  // 사다리 구조 생성 함수 (열마다 최소 1개 발판 보장)
+  // 사다리 구조 생성 함수 (개선된 버전 - 겹침 방지)
   function generateLadder() {
     ladderRungs = [];
-    const usedRows = new Set();
     const gapX  = canvas.width  / (numPlayers + 1);
     const stepY = canvas.height / (numPlayers * 2);
+    const numRows = numPlayers * 2 - 1;
 
-    // 1) 랜덤 발판 생성
+    // 각 행마다 사다리가 있는지 추적 (행 번호 -> 열 Set)
+    const rowUsage = new Map();
+    for (let r = 0; r < numRows; r++) {
+      rowUsage.set(r, new Set());
+    }
+
+    // 1) 랜덤 발판 생성 (같은 행에 인접한 사다리 방지)
     for (let c = 0; c < numPlayers - 1; c++) {
-      for (let r = 0; r < numPlayers * 2 - 1; r++) {
-        if (Math.random() < 0.4 && !usedRows.has(r)) {
-          usedRows.add(r);
-          ladderRungs.push({
-            startX:   gapX * (c + 1),
-            endX:     gapX * (c + 2),
-            y:        stepY * (r + 1),
-            startCol: c,
-            endCol:   c + 1
-          });
+      for (let r = 0; r < numRows; r++) {
+        if (Math.random() < 0.4) {
+          const usedCols = rowUsage.get(r);
+          // 같은 행에 이미 인접한 열이 사용되었는지 확인
+          if (!usedCols.has(c) && !usedCols.has(c + 1)) {
+            usedCols.add(c);
+            usedCols.add(c + 1);
+            ladderRungs.push({
+              startX:   gapX * (c + 1),
+              endX:     gapX * (c + 2),
+              y:        stepY * (r + 1),
+              row:      r,
+              startCol: c,
+              endCol:   c + 1
+            });
+          }
         }
       }
     }
 
     // 2) 열마다 최소 1개 발판 보장
     for (let c = 0; c < numPlayers - 1; c++) {
-      if (!ladderRungs.some(r => r.startCol === c)) {
-        // 해당 열에 발판이 하나도 없다면 랜덤 행 하나 추가
-        const r = Math.floor(Math.random() * (numPlayers * 2 - 1));
-        ladderRungs.push({
-          startX:   gapX * (c + 1),
-          endX:     gapX * (c + 2),
-          y:        stepY * (r + 1),
-          startCol: c,
-          endCol:   c + 1
-        });
+      if (!ladderRungs.some(rung => rung.startCol === c)) {
+        // 해당 열에 발판이 하나도 없다면 사용되지 않은 랜덤 행에 추가
+        let attempts = 0;
+        while (attempts < numRows) {
+          const r = Math.floor(Math.random() * numRows);
+          const usedCols = rowUsage.get(r);
+          if (!usedCols.has(c) && !usedCols.has(c + 1)) {
+            usedCols.add(c);
+            usedCols.add(c + 1);
+            ladderRungs.push({
+              startX:   gapX * (c + 1),
+              endX:     gapX * (c + 2),
+              y:        stepY * (r + 1),
+              row:      r,
+              startCol: c,
+              endCol:   c + 1
+            });
+            break;
+          }
+          attempts++;
+        }
       }
     }
 
@@ -268,6 +291,7 @@
     function getPlayerPaths() {
       const gapX = canvas.width / (numPlayers + 1);
       const stepY = canvas.height / (numPlayers * 2);
+      const numRows = numPlayers * 2 - 1;
       const paths = [];
 
       for(let i = 0; i < numPlayers; i++) {
@@ -277,19 +301,19 @@
         const path = [{x, y}];
 
         // 각 행을 순차적으로 내려가면서 사다리 확인
-        for(let row = 0; row < numPlayers * 2 - 1; row++) {
+        for(let row = 0; row < numRows; row++) {
           const currentY = stepY * (row + 1);
 
-          // 현재 위치에서 사다리가 있는지 확인
+          // 현재 행(row)과 열(col)에 연결된 사다리를 정확하게 찾기
           const rung = ladderRungs.find(r =>
-            Math.abs(r.y - currentY) < stepY * 0.1 &&
+            r.row === row &&
             (r.startCol === col || r.endCol === col)
           );
 
           if(rung) {
             // 사다리를 타기 전 위치 추가
             path.push({x, y: currentY});
-            // 열 변경
+            // 열 변경 (현재 열이 startCol이면 endCol로, endCol이면 startCol로)
             col = (rung.startCol === col) ? rung.endCol : rung.startCol;
             x = gapX * (col + 1);
             // 사다리를 탄 후 위치 추가
