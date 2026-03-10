@@ -6,372 +6,746 @@
   <title>사다리 게임</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f5f5f5;
-      --container-bg: #ffffff;
-      --text-color: #333333;
-      --primary: #4ecdc4;
-      --primary-dark: #009688;
-      --accent: #8bc34a;
-      --error-bg: #ffcdd2;
-      --error-text: #c62828;
+      --bg: #07071a;
+      --panel-bg: rgba(255,255,255,0.04);
+      --panel-border: rgba(255,255,255,0.08);
+      --text: #e0e0ff;
+      --text-muted: rgba(200,200,255,0.45);
+      --neon-green: #00ff87;
+      --neon-pink: #ff006e;
+      --neon-blue: #0099ff;
+      --radius: 16px;
       --font: 'Noto Sans KR', sans-serif;
+      --font-title: 'Black Han Sans', sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: var(--font);
       background: var(--bg);
-      color: var(--text-color);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      color: var(--text);
       min-height: 100vh;
-      padding: 20px;
+      padding: 24px 20px 40px;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.018) 39px, rgba(255,255,255,0.018) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.018) 39px, rgba(255,255,255,0.018) 40px);
     }
-    .game-container {
-      background: var(--container-bg);
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
-      max-width: 800px;
-      width: 100%;
-    }
-    h1 {
-      font-size: 2rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-      color: var(--primary-dark);
-    }
+
+    .page-wrapper { max-width: 1340px; margin: 0 auto; }
+
+    /* Back button */
     .back-btn {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: var(--primary);
-      color: white;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
       text-decoration: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      font-weight: 600;
-      transition: background 0.2s;
+      padding: 7px 16px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.2s;
+      margin-bottom: 20px;
     }
-    .back-btn:hover {
-      background: var(--primary-dark);
+    .back-btn:hover { color: var(--neon-green); border-color: rgba(0,255,135,0.4); background: rgba(0,255,135,0.05); }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 28px; }
+    .header h1 {
+      font-family: var(--font-title);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      background: linear-gradient(90deg, var(--neon-green) 0%, var(--neon-blue) 50%, var(--neon-pink) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      letter-spacing: 0.04em; margin-bottom: 6px;
     }
-    .input-section {
+    .header p { color: var(--text-muted); font-size: 0.88rem; }
+    .count-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 10px;
+      padding: 4px 14px; border-radius: 50px;
+      font-size: 0.8rem; font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      transition: all 0.3s;
+    }
+    .count-status.ok { border-color: rgba(0,255,135,0.4); color: var(--neon-green); }
+    .count-status.mismatch { border-color: rgba(255,0,110,0.4); color: var(--neon-pink); }
+
+    /* Main layout */
+    .main-layout {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      grid-template-columns: 230px 1fr 230px;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 18px;
     }
-    .input-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
+
+    /* Panels */
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
-    .input-group input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      transition: border-color 0.2s;
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 12px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--panel-border);
     }
-    .input-group input:focus {
-      border-color: var(--primary-dark);
-      outline: none;
-      box-shadow: 0 0 5px rgba(0, 150, 136, 0.3);
+    .panel-badge {
+      background: rgba(255,255,255,0.08); color: var(--text);
+      border-radius: 50px; padding: 2px 9px;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0;
     }
-    .button-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
-      margin-bottom: 1rem;
+
+    /* Card list */
+    .card-list {
+      display: flex; flex-direction: column; gap: 6px;
+      min-height: 50px; margin-bottom: 10px;
     }
-    button {
-      flex: 1 1 120px;
-      padding: 0.75rem 1rem;
-      background: var(--primary);
-      color: #ffffff;
-      border: none;
-      border-radius: 4px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+    .player-card {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      cursor: grab; transition: all 0.15s;
+      user-select: none;
     }
-    button:hover:not(:disabled) {
-      background: var(--primary-dark);
+    .player-card:active { cursor: grabbing; }
+    .player-card:hover { background: rgba(255,255,255,0.07); }
+    .player-card.dragging { opacity: 0.35; transform: scale(0.97); }
+    .player-card.drag-over { border-color: var(--neon-green); background: rgba(0,255,135,0.06); }
+    .card-color-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .card-handle { color: rgba(255,255,255,0.18); font-size: 13px; flex-shrink: 0; cursor: grab; }
+    .card-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text); font-family: var(--font); font-size: 0.83rem; min-width: 0;
+    }
+    .card-input::placeholder { color: var(--text-muted); }
+    .card-remove {
+      background: none; border: none; color: rgba(255,255,255,0.18);
+      cursor: pointer; padding: 2px 4px; font-size: 13px; border-radius: 4px;
+      transition: color 0.15s; flex-shrink: 0; line-height: 1;
+    }
+    .card-remove:hover { color: var(--neon-pink); }
+
+    /* Panel add button */
+    .panel-add-btn {
+      width: 100%; padding: 8px;
+      background: transparent;
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 10px; color: var(--text-muted);
+      font-family: var(--font); font-size: 0.82rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .panel-add-btn:hover:not(:disabled) {
+      border-color: var(--neon-green); color: var(--neon-green);
+      background: rgba(0,255,135,0.05);
+    }
+    .panel-add-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Canvas section */
+    .ladder-section { display: flex; flex-direction: column; }
+    canvas {
+      width: 100%; height: clamp(340px, 56vh, 580px);
+      border-radius: var(--radius); display: block;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* Control bar */
+    .control-bar {
+      display: flex; gap: 12px; justify-content: center;
+      flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .btn {
+      padding: 12px 32px; border: none; border-radius: 50px;
+      font-family: var(--font); font-weight: 700; font-size: 1rem;
+      cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+      color: #05051a;
+      box-shadow: 0 0 22px rgba(0,255,135,0.25);
+    }
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 0 40px rgba(0,255,135,0.55), 0 0 70px rgba(0,153,255,0.25);
       transform: translateY(-2px);
     }
-    button:disabled {
-      background: #dddddd;
-      color: #aaaaaa;
-      cursor: not-allowed;
-      transform: none;
+    .btn-secondary {
+      background: rgba(255,255,255,0.05); color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
     }
-    canvas {
-      width: 100%;
-      height: 350px;
-      background: #fafafa;
-      border: 1px solid #dddddd;
-      border-radius: 4px;
-      margin: 1.5rem 0;
-      display: block;
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.4);
+      color: var(--neon-pink); box-shadow: 0 0 20px rgba(255,0,110,0.15);
     }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+    /* Results */
     .results-section {
-      margin-top: 2rem;
+      background: var(--panel-bg); border: 1px solid var(--panel-border);
+      border-radius: var(--radius); padding: 20px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     }
     .results-section h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: var(--primary-dark);
+      font-family: var(--font-title); font-size: 1.2rem; margin-bottom: 14px;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
     }
     .result-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.75rem 1rem;
-      background: #e8f5e9;
-      border-left: 4px solid var(--accent);
-      border-radius: 4px;
-      margin-bottom: 0.75rem;
+      padding: 10px 14px; border-radius: 10px;
+      border-left: 3px solid;
+      background: rgba(255,255,255,0.04);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.88rem; gap: 8px;
     }
-    .message-box {
-      padding: 0.75rem 1rem;
-      background: var(--error-bg);
-      color: var(--error-text);
-      border-radius: 4px;
-      margin-bottom: 1rem;
-      display: none;
+    .result-item span { color: var(--text-muted); font-size: 0.82rem; }
+
+    /* Toast message */
+    .toast {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: rgba(15,15,40,0.92);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text); padding: 10px 22px;
+      border-radius: 50px; font-size: 0.88rem;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 9999;
+      white-space: nowrap;
     }
-    .message-box.show {
-      display: block;
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.error { border-color: rgba(255,0,110,0.5); }
+    .toast.success { border-color: rgba(0,255,135,0.5); }
+
+    /* Mobile */
+    @media (max-width: 800px) {
+      .main-layout { grid-template-columns: 1fr; }
+      canvas { height: 300px; }
+      .header h1 { font-size: 2rem; }
     }
   </style>
 </head>
 <body>
-  <a href="index.html" class="back-btn">← 게임 허브로</a>
-  <div class="game-container">
-    <h1>✨ 사다리 게임 ✨</h1>
-    <div class="message-box" id="messageBox"></div>
-    <div class="input-section" id="playerInputs"></div>
-    <div class="input-section" id="outcomeInputs"></div>
-    <div class="button-group">
-      <button id="addPlayerBtn">참가자 추가</button>
-      <button id="removePlayerBtn">참가자 제거</button>
+  <div class="page-wrapper">
+    <a href="index.html" class="back-btn">← 게임 허브</a>
+
+    <div class="header">
+      <h1>사다리 게임</h1>
+      <p>참가자와 발표순서를 입력하고 사다리를 타보세요!</p>
+      <div class="count-status" id="countStatus">참가자 5명 · 순서 5개 ✓</div>
     </div>
-    <div class="button-group">
-      <button id="startGameBtn">게임 시작</button>
-      <button id="resetGameBtn">초기화</button>
+
+    <div class="main-layout">
+      <!-- Left: Players -->
+      <div class="panel">
+        <div class="panel-header">
+          참가자 목록
+          <span class="panel-badge" id="playerBadge">5</span>
+        </div>
+        <div class="card-list" id="playersList"></div>
+        <button class="panel-add-btn" id="addPlayerBtn">＋ 참가자 추가</button>
+      </div>
+
+      <!-- Center: Canvas -->
+      <div class="ladder-section">
+        <canvas id="ladderCanvas"></canvas>
+      </div>
+
+      <!-- Right: Outcomes -->
+      <div class="panel">
+        <div class="panel-header">
+          발표순서 목록
+          <span class="panel-badge" id="outcomeBadge">5</span>
+        </div>
+        <div class="card-list" id="outcomesList"></div>
+        <button class="panel-add-btn" id="addOutcomeBtn">＋ 순서 추가</button>
+      </div>
     </div>
-    <canvas id="ladderCanvas"></canvas>
+
+    <div class="control-bar">
+      <button class="btn btn-primary" id="startGameBtn">🎮 게임 시작</button>
+      <button class="btn btn-secondary" id="resetGameBtn">초기화</button>
+    </div>
+
     <div class="results-section" id="resultsSection" style="display:none;">
-      <h2>⭐ 게임 결과 ⭐</h2>
-      <div id="resultsList"></div>
+      <h2>⭐ 게임 결과</h2>
+      <div class="results-grid" id="resultsList"></div>
     </div>
   </div>
+
+  <div class="toast" id="toast"></div>
+
   <script>
+    // ─── Constants ───────────────────────────────────────────────
+    const COLORS = [
+      '#00ff87','#ff006e','#0099ff','#ffbe0b',
+      '#fb5607','#a855f7','#3a86ff','#ff99c8',
+      '#06d6a0','#f72585'
+    ];
+    const LABEL_H = 52; // pixels reserved at top/bottom for name labels
+    const MAX_COUNT = 10;
+    const MIN_COUNT = 2;
+
+    // ─── State ───────────────────────────────────────────────────
+    let players  = ['김민준', '이서연', '박지호', '최예은', '정승우'];
+    let outcomes = ['1번', '2번', '3번', '4번', '5번'];
+    let ladderRungs = []; // [{row, startCol, endCol}]
+    let animationId = null;
+    let dragSrcIndex = null;
+    let dragType = null;
+
+    // ─── Canvas ──────────────────────────────────────────────────
     const canvas = document.getElementById('ladderCanvas');
     const ctx = canvas.getContext('2d');
-    const playerInputsDiv = document.getElementById('playerInputs');
-    const outcomeInputsDiv = document.getElementById('outcomeInputs');
-    const addPlayerBtn = document.getElementById('addPlayerBtn');
-    const removePlayerBtn = document.getElementById('removePlayerBtn');
-    const startGameBtn = document.getElementById('startGameBtn');
-    const resetGameBtn = document.getElementById('resetGameBtn');
-    const resultsSection = document.getElementById('resultsSection');
-    const resultsList = document.getElementById('resultsList');
-    const messageBox = document.getElementById('messageBox');
 
-    let numPlayers = 5;
-    let numOutcomes = 5;
-    let ladderRungs = [];
-    let ladderGenerated = false;
-    let animationId = null;
-
-    function showMessage(message, type = 'error') {
-      messageBox.textContent = message;
-      messageBox.className = `message-box show ${type}`;
-      clearTimeout(messageBox.hideTimeout);
-      messageBox.hideTimeout = setTimeout(() => messageBox.classList.remove('show'), 3000);
+    function resizeCanvas() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
     }
 
-    function updatePlayerInputs() {
-      playerInputsDiv.innerHTML = '';
-      for (let i = 0; i < numPlayers; i++) {
-        const wrapper = document.createElement('div'); wrapper.className = 'input-group';
-        wrapper.innerHTML = `<label for=\`player${i+1}\`>참가자 ${i+1}</label>` +
-                             `<input type="text" id="player${i+1}" value="참가자 ${i+1}" />`;
-        playerInputsDiv.appendChild(wrapper);
+    function getLadderMetrics() {
+      const n = players.length;
+      const w = canvas.width, h = canvas.height;
+      const gapX    = w / (n + 1);
+      const ladderH = h - LABEL_H * 2;
+      const numRows = n * 2 - 1;
+      const stepY   = ladderH / numRows;
+      return { n, w, h, gapX, ladderH, numRows, stepY };
+    }
+
+    function rungY(row) {
+      const { ladderH, numRows } = getLadderMetrics();
+      return LABEL_H + ((row + 1) / numRows) * ladderH;
+    }
+
+    // ─── Ladder Generation ───────────────────────────────────────
+    function generateLadder() {
+      ladderRungs = [];
+      const n = players.length;
+      const numRows = n * 2 - 1;
+      const rowUsage = new Map();
+      for (let r = 0; r < numRows; r++) rowUsage.set(r, new Set());
+
+      for (let c = 0; c < n - 1; c++) {
+        for (let r = 0; r < numRows; r++) {
+          if (Math.random() < 0.4) {
+            const used = rowUsage.get(r);
+            if (!used.has(c) && !used.has(c + 1)) {
+              used.add(c); used.add(c + 1);
+              ladderRungs.push({ row: r, startCol: c, endCol: c + 1 });
+            }
+          }
+        }
       }
-    }
 
-    function updateOutcomeInputs() {
-      outcomeInputsDiv.innerHTML = '';
-      for (let i = 0; i < numOutcomes; i++) {
-        const wrapper = document.createElement('div'); wrapper.className = 'input-group';
-        wrapper.innerHTML = `<label for=\`outcome${i+1}\`>발표순서 ${i+1}</label>` +
-                             `<input type="text" id="outcome${i+1}" value="발표순서 ${i+1}" />`;
-        outcomeInputsDiv.appendChild(wrapper);
-      }
-    }
-
-  // 사다리 구조 생성 함수 (개선된 버전 - 겹침 방지)
-  function generateLadder() {
-    ladderRungs = [];
-    const gapX  = canvas.width  / (numPlayers + 1);
-    const stepY = canvas.height / (numPlayers * 2);
-    const numRows = numPlayers * 2 - 1;
-
-    // 각 행마다 사다리가 있는지 추적 (행 번호 -> 열 Set)
-    const rowUsage = new Map();
-    for (let r = 0; r < numRows; r++) {
-      rowUsage.set(r, new Set());
-    }
-
-    // 1) 랜덤 발판 생성 (같은 행에 인접한 사다리 방지)
-    for (let c = 0; c < numPlayers - 1; c++) {
-      for (let r = 0; r < numRows; r++) {
-        if (Math.random() < 0.4) {
-          const usedCols = rowUsage.get(r);
-          // 같은 행에 이미 인접한 열이 사용되었는지 확인
-          if (!usedCols.has(c) && !usedCols.has(c + 1)) {
-            usedCols.add(c);
-            usedCols.add(c + 1);
-            ladderRungs.push({
-              startX:   gapX * (c + 1),
-              endX:     gapX * (c + 2),
-              y:        stepY * (r + 1),
-              row:      r,
-              startCol: c,
-              endCol:   c + 1
-            });
+      // Guarantee at least one rung per column pair
+      for (let c = 0; c < n - 1; c++) {
+        if (!ladderRungs.some(r => r.startCol === c)) {
+          let tries = 0;
+          while (tries++ < numRows * 4) {
+            const r = Math.floor(Math.random() * numRows);
+            const used = rowUsage.get(r);
+            if (!used.has(c) && !used.has(c + 1)) {
+              used.add(c); used.add(c + 1);
+              ladderRungs.push({ row: r, startCol: c, endCol: c + 1 });
+              break;
+            }
           }
         }
       }
     }
 
-    // 2) 열마다 최소 1개 발판 보장
-    for (let c = 0; c < numPlayers - 1; c++) {
-      if (!ladderRungs.some(rung => rung.startCol === c)) {
-        // 해당 열에 발판이 하나도 없다면 사용되지 않은 랜덤 행에 추가
-        let attempts = 0;
-        while (attempts < numRows) {
-          const r = Math.floor(Math.random() * numRows);
-          const usedCols = rowUsage.get(r);
-          if (!usedCols.has(c) && !usedCols.has(c + 1)) {
-            usedCols.add(c);
-            usedCols.add(c + 1);
-            ladderRungs.push({
-              startX:   gapX * (c + 1),
-              endX:     gapX * (c + 2),
-              y:        stepY * (r + 1),
-              row:      r,
-              startCol: c,
-              endCol:   c + 1
-            });
-            break;
-          }
-          attempts++;
-        }
-      }
+    // ─── Draw ────────────────────────────────────────────────────
+    function rrect(cx, x, y, w, h, r) {
+      cx.beginPath();
+      cx.moveTo(x + r, y);
+      cx.lineTo(x + w - r, y);
+      cx.quadraticCurveTo(x + w, y, x + w, y + r);
+      cx.lineTo(x + w, y + h - r);
+      cx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      cx.lineTo(x + r, y + h);
+      cx.quadraticCurveTo(x, y + h, x, y + h - r);
+      cx.lineTo(x, y + r);
+      cx.quadraticCurveTo(x, y, x + r, y);
+      cx.closePath();
     }
-
-    ladderGenerated = true;
-  }
 
     function drawStaticLadder() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      const gapX = canvas.width/(numPlayers+1);
-      ctx.lineWidth=2; ctx.strokeStyle='#607d8b';
-      for(let i=0;i<numPlayers;i++){ctx.beginPath();ctx.moveTo(gapX*(i+1),0);ctx.lineTo(gapX*(i+1),canvas.height);ctx.stroke();}
-      ladderRungs.forEach(r=>{ctx.beginPath();ctx.moveTo(r.startX,r.y);ctx.lineTo(r.endX,r.y);ctx.stroke();});
+      const { n, w, h, gapX } = getLadderMetrics();
+      ctx.clearRect(0, 0, w, h);
+
+      // Dark gradient background
+      const bg = ctx.createLinearGradient(0, 0, 0, h);
+      bg.addColorStop(0, '#0a0a22');
+      bg.addColorStop(1, '#06060f');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+
+      // Subtle grid overlay
+      ctx.strokeStyle = 'rgba(255,255,255,0.022)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 44) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+      for (let y = 0; y < h; y += 44) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Player name labels (top)
+      players.forEach((name, i) => {
+        const x = gapX * (i + 1);
+        const color = COLORS[i % COLORS.length];
+        const label = name.length > 5 ? name.slice(0, 5) + '…' : name;
+        ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+        const tw = ctx.measureText(label).width;
+        const pw = Math.min(tw + 18, gapX - 8);
+        const ph = 26;
+        const px = x - pw / 2;
+        const py = LABEL_H / 2 - ph / 2;
+
+        // Pill bg
+        ctx.fillStyle = color + '28';
+        rrect(ctx, px, py, pw, ph, 8);
+        ctx.fill();
+        ctx.strokeStyle = color + '70';
+        ctx.lineWidth = 1;
+        rrect(ctx, px, py, pw, ph, 8);
+        ctx.stroke();
+
+        // Text glow
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = color;
+        ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+        ctx.fillText(label, x, LABEL_H / 2);
+        ctx.shadowBlur = 0;
+      });
+
+      // Outcome labels (bottom)
+      ctx.font = '11px "Noto Sans KR", sans-serif';
+      const showCount = Math.min(outcomes.length, n);
+      outcomes.slice(0, showCount).forEach((out, i) => {
+        const x = gapX * (i + 1);
+        const label = out.length > 5 ? out.slice(0, 5) + '…' : out;
+        ctx.fillStyle = 'rgba(200,200,255,0.5)';
+        ctx.fillText(label, x, h - LABEL_H / 2);
+      });
+
+      // Vertical lines
+      for (let i = 0; i < n; i++) {
+        const x = gapX * (i + 1);
+        const grad = ctx.createLinearGradient(x, LABEL_H, x, h - LABEL_H);
+        grad.addColorStop(0, 'rgba(120,140,240,0.55)');
+        grad.addColorStop(0.5, 'rgba(100,120,220,0.45)');
+        grad.addColorStop(1, 'rgba(120,140,240,0.55)');
+        ctx.shadowColor = 'rgba(100,120,255,0.3)';
+        ctx.shadowBlur = 4;
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, LABEL_H);
+        ctx.lineTo(x, h - LABEL_H);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+
+      // Rungs
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ladderRungs.forEach(rung => {
+        const y = rungY(rung.row);
+        const x1 = gapX * (rung.startCol + 1);
+        const x2 = gapX * (rung.endCol + 1);
+        ctx.shadowColor = '#ff006e';
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = '#ff006e';
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+      });
+      ctx.shadowBlur = 0;
+      ctx.lineCap = 'butt';
     }
 
+    // ─── Path Calculation ─────────────────────────────────────────
     function getPlayerPaths() {
-      const gapX = canvas.width / (numPlayers + 1);
-      const stepY = canvas.height / (numPlayers * 2);
-      const numRows = numPlayers * 2 - 1;
+      const { n, h, gapX, ladderH, numRows } = getLadderMetrics();
       const paths = [];
 
-      for(let i = 0; i < numPlayers; i++) {
-        let x = gapX * (i + 1);
-        let y = 0;
+      for (let i = 0; i < n; i++) {
         let col = i;
-        const path = [{x, y}];
+        let x = gapX * (col + 1);
+        let y = LABEL_H;
+        const path = [{ x, y }];
 
-        // 각 행을 순차적으로 내려가면서 사다리 확인
-        for(let row = 0; row < numRows; row++) {
-          const currentY = stepY * (row + 1);
-
-          // 현재 행(row)과 열(col)에 연결된 사다리를 정확하게 찾기
+        for (let row = 0; row < numRows; row++) {
+          const nextY = LABEL_H + ((row + 1) / numRows) * ladderH;
           const rung = ladderRungs.find(r =>
-            r.row === row &&
-            (r.startCol === col || r.endCol === col)
+            r.row === row && (r.startCol === col || r.endCol === col)
           );
 
-          if(rung) {
-            // 사다리를 타기 전 위치 추가
-            path.push({x, y: currentY});
-            // 열 변경 (현재 열이 startCol이면 endCol로, endCol이면 startCol로)
-            col = (rung.startCol === col) ? rung.endCol : rung.startCol;
-            x = gapX * (col + 1);
-            // 사다리를 탄 후 위치 추가
-            path.push({x, y: currentY});
+          if (rung) {
+            path.push({ x, y: nextY });
+            col = rung.startCol === col ? rung.endCol : rung.startCol;
+            x   = gapX * (col + 1);
+            path.push({ x, y: nextY });
           } else {
-            // 사다리가 없으면 직진
-            path.push({x, y: currentY});
+            path.push({ x, y: nextY });
           }
-
-          y = currentY;
+          y = nextY;
         }
 
-        // 마지막 지점까지 이동
-        if(path[path.length-1].y < canvas.height) {
-          path.push({x, y: canvas.height});
-        }
-
+        const bottom = h - LABEL_H;
+        if (path[path.length - 1].y < bottom) path.push({ x, y: bottom });
         paths.push(path);
       }
-
       return paths;
     }
 
-    function drawBall(x,y,idx){ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);const cols=['#ef5350','#ab47bc','#42a5f5','#66bb6a','#ffee58','#ff7043'];ctx.fillStyle=cols[idx%cols.length];ctx.fill();ctx.strokeStyle='#263238';ctx.lineWidth=1;ctx.stroke();}
+    // ─── Animation ───────────────────────────────────────────────
+    function drawBall(x, y, playerIdx) {
+      const color = COLORS[playerIdx % COLORS.length];
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Specular
+      ctx.beginPath();
+      ctx.arc(x - 2.5, y - 2.5, 3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fill();
+    }
 
-    function animatePaths(paths){cancelAnimationFrame(animationId);const pos=paths.map(p=>({x:p[0].x,y:p[0].y}));const idxArr=Array(numPlayers).fill(0);const speed=5;resultsList.innerHTML='';resultsSection.style.display='none';[startGameBtn,resetGameBtn,addPlayerBtn,removePlayerBtn].forEach(b=>b.disabled=true);(function step(){drawStaticLadder();let done=true;pos.forEach((p,i)=>{const path=paths[i];if(idxArr[i]<path.length-1){done=false;const next=path[idxArr[i]+1];const dx=next.x-p.x,dy=next.y-p.y,dist=Math.hypot(dx,dy);if(dist<speed){p.x=next.x;p.y=next.y;idxArr[i]++;}else{p.x+=dx/dist*speed;p.y+=dy/dist*speed;}}drawBall(p.x,p.y,i);});if(!done)animationId=requestAnimationFrame(step);else{displayResults(paths);[startGameBtn,resetGameBtn,addPlayerBtn,removePlayerBtn].forEach(b=>b.disabled=false);}})();}
+    function animatePaths(paths) {
+      cancelAnimationFrame(animationId);
+      const pos = paths.map(p => ({ x: p[0].x, y: p[0].y }));
+      const idx  = Array(players.length).fill(0);
+      const speed = 5;
+      const btns = getAllBtns();
 
-    function displayResults(paths){
-      resultsList.innerHTML='';
-      resultsSection.style.display='block';
-      const names=Array.from(playerInputsDiv.querySelectorAll('input')).map(i=>i.value);
-      const outs=Array.from(outcomeInputsDiv.querySelectorAll('input')).map(i=>i.value);
-      const gapX = canvas.width / (numPlayers + 1);
+      document.getElementById('resultsList').innerHTML = '';
+      document.getElementById('resultsSection').style.display = 'none';
+      btns.forEach(b => b.disabled = true);
 
-      // 각 참가자의 최종 위치를 계산
-      names.forEach((n,i)=>{
+      (function step() {
+        drawStaticLadder();
+        let done = true;
+
+        pos.forEach((p, i) => {
+          const path = paths[i];
+          if (idx[i] < path.length - 1) {
+            done = false;
+            const next = path[idx[i] + 1];
+            const dx = next.x - p.x, dy = next.y - p.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < speed) { p.x = next.x; p.y = next.y; idx[i]++; }
+            else { p.x += dx / dist * speed; p.y += dy / dist * speed; }
+          }
+          drawBall(p.x, p.y, i);
+        });
+
+        if (!done) { animationId = requestAnimationFrame(step); }
+        else { displayResults(paths); btns.forEach(b => b.disabled = false); }
+      })();
+    }
+
+    // ─── Results ─────────────────────────────────────────────────
+    function displayResults(paths) {
+      const { gapX } = getLadderMetrics();
+      const list = document.getElementById('resultsList');
+      list.innerHTML = '';
+      document.getElementById('resultsSection').style.display = 'block';
+
+      players.forEach((name, i) => {
         const finalX = paths[i][paths[i].length - 1].x;
-        // 최종 X 위치로부터 열 번호 계산 (반올림하여 정확한 열 찾기)
-        let finalCol = Math.round((finalX / gapX) - 1);
-        // 범위 확인
-        finalCol = Math.max(0, Math.min(finalCol, outs.length - 1));
+        let col = Math.round(finalX / gapX) - 1;
+        col = Math.max(0, Math.min(col, outcomes.length - 1));
 
-        const d=document.createElement('div');
-        d.className='result-item';
-        d.innerHTML=`<span><strong>${n}</strong></span><span>→ ${outs[finalCol]}</span>`;
-        resultsList.appendChild(d);
+        const el = document.createElement('div');
+        el.className = 'result-item';
+        el.style.borderLeftColor = COLORS[i % COLORS.length];
+        el.innerHTML = `<strong style="color:${COLORS[i%COLORS.length]}">${name}</strong><span>→ ${outcomes[col]}</span>`;
+        list.appendChild(el);
       });
     }
 
-    addPlayerBtn.addEventListener('click',()=>{if(numPlayers<8){numPlayers++;numOutcomes++;updatePlayerInputs();updateOutcomeInputs();generateLadder();drawStaticLadder();showMessage('참가자 추가됨');}else showMessage('최대 8명');});
-    removePlayerBtn.addEventListener('click',()=>{if(numPlayers>2){numPlayers--;numOutcomes--;updatePlayerInputs();updateOutcomeInputs();generateLadder();drawStaticLadder();showMessage('참가자 제거됨');}else showMessage('최소 2명');});
+    // ─── Cards Rendering ─────────────────────────────────────────
+    function renderCards() {
+      renderList('playersList',  players,  'player');
+      renderList('outcomesList', outcomes, 'outcome');
+      document.getElementById('playerBadge').textContent  = players.length;
+      document.getElementById('outcomeBadge').textContent = outcomes.length;
+      document.getElementById('addPlayerBtn').disabled  = players.length  >= MAX_COUNT;
+      document.getElementById('addOutcomeBtn').disabled = outcomes.length >= MAX_COUNT;
+      updateCountStatus();
+    }
 
-    startGameBtn.addEventListener('click',()=>{const pns=Array.from(playerInputsDiv.querySelectorAll('input')).map(i=>i.value.trim());const ons=Array.from(outcomeInputsDiv.querySelectorAll('input')).map(i=>i.value.trim());if(pns.some(n=>!n)||ons.some(o=>!o)){showMessage('모든 값을 입력해주세요');return;}if(!ladderGenerated)generateLadder();animatePaths(getPlayerPaths());});
+    function renderList(containerId, arr, type) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
 
-    resetGameBtn.addEventListener('click',()=>{cancelAnimationFrame(animationId);numPlayers=numOutcomes=3;updatePlayerInputs();updateOutcomeInputs();generateLadder();drawStaticLadder();resultsSection.style.display='none';});
+      arr.forEach((val, i) => {
+        const card = document.createElement('div');
+        card.className = 'player-card';
+        card.draggable = true;
+        card.dataset.index = i;
 
-    window.onload=()=>{canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;updatePlayerInputs();updateOutcomeInputs();generateLadder();drawStaticLadder();};
-    window.addEventListener('resize',()=>{canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;generateLadder();drawStaticLadder();resultsSection.style.display='none';});
+        card.innerHTML = `
+          <span class="card-handle">⠿</span>
+          <span class="card-color-dot" style="background:${COLORS[i % COLORS.length]}"></span>
+          <input class="card-input" type="text" value="${escHtml(val)}" placeholder="${type === 'player' ? '참가자 이름' : '발표순서'}">
+          <button class="card-remove" title="제거">✕</button>
+        `;
+
+        card.querySelector('.card-input').addEventListener('input', e => {
+          arr[i] = e.target.value;
+          drawStaticLadder();
+          updateCountStatus();
+        });
+
+        card.querySelector('.card-remove').addEventListener('click', () => {
+          if (arr.length <= MIN_COUNT) { showToast(`최소 ${MIN_COUNT}개 필요합니다`); return; }
+          arr.splice(i, 1);
+          if (type === 'player') generateLadder();
+          renderCards();
+          drawStaticLadder();
+        });
+
+        // Drag
+        card.addEventListener('dragstart', e => {
+          dragSrcIndex = i; dragType = type;
+          e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => card.classList.add('dragging'), 0);
+        });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+          container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+          dragSrcIndex = null; dragType = null;
+        });
+        card.addEventListener('dragover', e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+          card.classList.add('drag-over');
+        });
+        card.addEventListener('drop', e => {
+          e.preventDefault();
+          card.classList.remove('drag-over');
+          if (dragType !== type || dragSrcIndex === null || dragSrcIndex === i) return;
+          const [moved] = arr.splice(dragSrcIndex, 1);
+          arr.splice(i, 0, moved);
+          // Note: reorder doesn't regenerate ladder, only redraws labels
+          renderCards();
+          drawStaticLadder();
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ─── Status ──────────────────────────────────────────────────
+    function updateCountStatus() {
+      const el = document.getElementById('countStatus');
+      const ok = players.length === outcomes.length;
+      el.textContent = ok
+        ? `참가자 ${players.length}명 · 순서 ${outcomes.length}개 ✓`
+        : `참가자 ${players.length}명 ≠ 순서 ${outcomes.length}개 — 수를 맞춰주세요`;
+      el.className = 'count-status ' + (ok ? 'ok' : 'mismatch');
+    }
+
+    // ─── Toast ───────────────────────────────────────────────────
+    function showToast(msg, type = 'error') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast show ${type}`;
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────
+    function getAllBtns() {
+      return [
+        document.getElementById('startGameBtn'),
+        document.getElementById('resetGameBtn'),
+        document.getElementById('addPlayerBtn'),
+        document.getElementById('addOutcomeBtn')
+      ];
+    }
+
+    // ─── Event Listeners ─────────────────────────────────────────
+    document.getElementById('addPlayerBtn').addEventListener('click', () => {
+      if (players.length >= MAX_COUNT) return showToast('최대 10명');
+      players.push(`참가자 ${players.length + 1}`);
+      generateLadder();
+      renderCards();
+      drawStaticLadder();
+      showToast('참가자 추가됨', 'success');
+    });
+
+    document.getElementById('addOutcomeBtn').addEventListener('click', () => {
+      if (outcomes.length >= MAX_COUNT) return showToast('최대 10개');
+      outcomes.push(`순서 ${outcomes.length + 1}`);
+      renderCards();
+      drawStaticLadder();
+      showToast('순서 추가됨', 'success');
+    });
+
+    document.getElementById('startGameBtn').addEventListener('click', () => {
+      const pns = players.map(p => p.trim());
+      const ons = outcomes.map(o => o.trim());
+      if (pns.some(n => !n) || ons.some(o => !o)) {
+        showToast('모든 이름/순서를 입력해주세요'); return;
+      }
+      if (pns.length !== ons.length) {
+        showToast(`참가자 ${pns.length}명 ≠ 순서 ${ons.length}개`); return;
+      }
+      animatePaths(getPlayerPaths());
+    });
+
+    document.getElementById('resetGameBtn').addEventListener('click', () => {
+      cancelAnimationFrame(animationId);
+      players  = ['김민준', '이서연', '박지호', '최예은', '정승우'];
+      outcomes = ['1번', '2번', '3번', '4번', '5번'];
+      generateLadder();
+      renderCards();
+      drawStaticLadder();
+      document.getElementById('resultsSection').style.display = 'none';
+    });
+
+    // ─── Init ────────────────────────────────────────────────────
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      generateLadder();
+      renderCards();
+      document.fonts.ready.then(() => drawStaticLadder());
+    });
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      generateLadder();
+      drawStaticLadder();
+      document.getElementById('resultsSection').style.display = 'none';
+    });
   </script>
 </body>
 </html>
