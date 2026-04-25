@@ -20,6 +20,18 @@
       --radius: 16px;
       --font: 'Noto Sans KR', sans-serif;
       --font-title: 'Black Han Sans', sans-serif;
+      --grid-line: rgba(255,255,255,0.018);
+    }
+    :root.light {
+      --bg: #f0f2f8;
+      --panel-bg: rgba(255,255,255,0.85);
+      --panel-border: rgba(0,0,0,0.08);
+      --text: #1a1a3e;
+      --text-muted: rgba(60,60,120,0.55);
+      --neon-green: #00b85c;
+      --neon-pink: #e0005f;
+      --neon-blue: #0077cc;
+      --grid-line: rgba(0,0,0,0.04);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -30,26 +42,46 @@
       min-height: 100vh;
       padding: 24px 20px 40px;
       background-image:
-        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.018) 39px, rgba(255,255,255,0.018) 40px),
-        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.018) 39px, rgba(255,255,255,0.018) 40px);
+        repeating-linear-gradient(0deg, transparent, transparent 39px, var(--grid-line) 39px, var(--grid-line) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, var(--grid-line) 39px, var(--grid-line) 40px);
     }
 
     .page-wrapper { max-width: 1340px; margin: 0 auto; }
 
     /* Back button */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
     .back-btn {
       display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,0.06);
+      background: var(--panel-bg);
       color: var(--text-muted);
       text-decoration: none;
       padding: 7px 16px;
       border-radius: 50px;
       font-size: 0.82rem;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid var(--panel-border);
       transition: all 0.2s;
-      margin-bottom: 20px;
     }
-    .back-btn:hover { color: var(--neon-green); border-color: rgba(0,255,135,0.4); background: rgba(0,255,135,0.05); }
+    .back-btn:hover { color: var(--neon-green); border-color: rgba(0,200,100,0.4); background: rgba(0,200,100,0.06); }
+
+    /* Theme toggle */
+    .theme-toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 50px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover { color: var(--text); border-color: var(--neon-blue); background: rgba(0,150,255,0.06); }
+    .theme-toggle .toggle-icon { font-size: 1rem; transition: transform 0.4s; }
+    :root.light .theme-toggle .toggle-icon { transform: rotate(180deg); }
 
     /* Header */
     .header { text-align: center; margin-bottom: 28px; }
@@ -240,7 +272,13 @@
 </head>
 <body>
   <div class="page-wrapper">
-    <a href="index.html" class="back-btn">← 게임 허브</a>
+    <div class="top-bar">
+      <a href="index.html" class="back-btn">← 게임 허브</a>
+      <button class="theme-toggle" id="themeToggle">
+        <span class="toggle-icon">🌙</span>
+        <span class="toggle-label">라이트 모드</span>
+      </button>
+    </div>
 
     <div class="header">
       <h1>사다리 게임</h1>
@@ -387,15 +425,21 @@
       const { n, w, h, gapX } = getLadderMetrics();
       ctx.clearRect(0, 0, w, h);
 
-      // Dark gradient background
+      // Background
+      const light = document.documentElement.classList.contains('light');
       const bg = ctx.createLinearGradient(0, 0, 0, h);
-      bg.addColorStop(0, '#0a0a22');
-      bg.addColorStop(1, '#06060f');
+      if (light) {
+        bg.addColorStop(0, '#eef0f8');
+        bg.addColorStop(1, '#e4e8f4');
+      } else {
+        bg.addColorStop(0, '#0a0a22');
+        bg.addColorStop(1, '#06060f');
+      }
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
 
       // Subtle grid overlay
-      ctx.strokeStyle = 'rgba(255,255,255,0.022)';
+      ctx.strokeStyle = light ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.022)';
       ctx.lineWidth = 1;
       for (let x = 0; x < w; x += 44) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
       for (let y = 0; y < h; y += 44) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
@@ -439,7 +483,7 @@
       outcomes.slice(0, showCount).forEach((out, i) => {
         const x = gapX * (i + 1);
         const label = out.length > 5 ? out.slice(0, 5) + '…' : out;
-        ctx.fillStyle = 'rgba(200,200,255,0.5)';
+        ctx.fillStyle = light ? 'rgba(40,40,100,0.55)' : 'rgba(200,200,255,0.5)';
         ctx.fillText(label, x, h - LABEL_H / 2);
       });
 
@@ -447,10 +491,17 @@
       for (let i = 0; i < n; i++) {
         const x = gapX * (i + 1);
         const grad = ctx.createLinearGradient(x, LABEL_H, x, h - LABEL_H);
-        grad.addColorStop(0, 'rgba(120,140,240,0.55)');
-        grad.addColorStop(0.5, 'rgba(100,120,220,0.45)');
-        grad.addColorStop(1, 'rgba(120,140,240,0.55)');
-        ctx.shadowColor = 'rgba(100,120,255,0.3)';
+        if (light) {
+          grad.addColorStop(0, 'rgba(80,100,200,0.45)');
+          grad.addColorStop(0.5, 'rgba(60,80,180,0.38)');
+          grad.addColorStop(1, 'rgba(80,100,200,0.45)');
+          ctx.shadowColor = 'rgba(60,80,200,0.18)';
+        } else {
+          grad.addColorStop(0, 'rgba(120,140,240,0.55)');
+          grad.addColorStop(0.5, 'rgba(100,120,220,0.45)');
+          grad.addColorStop(1, 'rgba(120,140,240,0.55)');
+          ctx.shadowColor = 'rgba(100,120,255,0.3)';
+        }
         ctx.shadowBlur = 4;
         ctx.strokeStyle = grad;
         ctx.lineWidth = 2;
@@ -468,9 +519,9 @@
         const y = rungY(rung.row);
         const x1 = gapX * (rung.startCol + 1);
         const x2 = gapX * (rung.endCol + 1);
-        ctx.shadowColor = '#ff006e';
-        ctx.shadowBlur = 10;
-        ctx.strokeStyle = '#ff006e';
+        ctx.shadowColor = light ? '#c0004e' : '#ff006e';
+        ctx.shadowBlur = light ? 5 : 10;
+        ctx.strokeStyle = light ? '#e0005f' : '#ff006e';
         ctx.beginPath();
         ctx.moveTo(x1, y);
         ctx.lineTo(x2, y);
@@ -704,7 +755,7 @@
 
     document.getElementById('addOutcomeBtn').addEventListener('click', () => {
       if (outcomes.length >= MAX_COUNT) return showToast('최대 10개');
-      outcomes.push(`순서 ${outcomes.length + 1}`);
+      outcomes.push(`${outcomes.length + 1}번`);
       renderCards();
       drawStaticLadder();
       showToast('순서 추가됨', 'success');
@@ -732,8 +783,34 @@
       document.getElementById('resultsSection').style.display = 'none';
     });
 
+    // ─── Theme Toggle ────────────────────────────────────────────
+    const themeToggle = document.getElementById('themeToggle');
+    const toggleIcon  = themeToggle.querySelector('.toggle-icon');
+    const toggleLabel = themeToggle.querySelector('.toggle-label');
+    let isLight = localStorage.getItem('ladderTheme') === 'light';
+
+    function applyTheme() {
+      if (isLight) {
+        document.documentElement.classList.add('light');
+        toggleIcon.textContent  = '☀️';
+        toggleLabel.textContent = '다크 모드';
+      } else {
+        document.documentElement.classList.remove('light');
+        toggleIcon.textContent  = '🌙';
+        toggleLabel.textContent = '라이트 모드';
+      }
+    }
+
+    themeToggle.addEventListener('click', () => {
+      isLight = !isLight;
+      localStorage.setItem('ladderTheme', isLight ? 'light' : 'dark');
+      applyTheme();
+      drawStaticLadder();
+    });
+
     // ─── Init ────────────────────────────────────────────────────
     window.addEventListener('load', () => {
+      applyTheme();
       resizeCanvas();
       generateLadder();
       renderCards();
