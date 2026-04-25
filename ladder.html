@@ -221,16 +221,55 @@
     }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
+    /* Speed slider */
+    .speed-bar {
+      display: flex; align-items: center; gap: 10px;
+      justify-content: center; margin-bottom: 14px;
+      font-size: 0.82rem; color: var(--text-muted);
+    }
+    .speed-bar input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 130px; height: 4px;
+      border-radius: 4px;
+      background: var(--panel-border);
+      outline: none; cursor: pointer;
+    }
+    .speed-bar input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--neon-green);
+      box-shadow: 0 0 6px var(--neon-green);
+      cursor: pointer;
+    }
+    .speed-label { min-width: 28px; text-align: right; color: var(--neon-green); font-weight: 700; }
+
     /* Results */
     .results-section {
       background: var(--panel-bg); border: 1px solid var(--panel-border);
       border-radius: var(--radius); padding: 20px;
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     }
+    .results-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
     .results-section h2 {
-      font-family: var(--font-title); font-size: 1.2rem; margin-bottom: 14px;
+      font-family: var(--font-title); font-size: 1.2rem;
       background: linear-gradient(90deg, var(--neon-green), var(--neon-pink));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .results-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-icon {
+      background: var(--panel-bg); border: 1px solid var(--panel-border);
+      color: var(--text-muted); border-radius: 8px;
+      padding: 5px 12px; font-size: 0.78rem; font-family: var(--font);
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-icon:hover { color: var(--neon-green); border-color: rgba(0,200,100,0.4); }
+    .results-hint {
+      font-size: 0.78rem; color: var(--text-muted);
+      text-align: center; margin-bottom: 12px;
+      transition: opacity 0.3s;
     }
     .results-grid {
       display: grid;
@@ -243,8 +282,32 @@
       background: rgba(255,255,255,0.04);
       display: flex; justify-content: space-between; align-items: center;
       font-size: 0.88rem; gap: 8px;
+      transition: all 0.3s;
     }
     .result-item span { color: var(--text-muted); font-size: 0.82rem; }
+    /* 순차 공개 모드: 숨김 상태 */
+    .result-item.hidden-result {
+      cursor: pointer;
+      background: rgba(255,255,255,0.02);
+      border-left-color: rgba(255,255,255,0.15) !important;
+    }
+    .result-item.hidden-result strong,
+    .result-item.hidden-result span { opacity: 0; }
+    .result-item.hidden-result::after {
+      content: '클릭하여 공개';
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.75rem; color: var(--text-muted);
+      white-space: nowrap; pointer-events: none;
+    }
+    .result-item.hidden-result { position: relative; }
+    .result-item.reveal-anim {
+      animation: revealPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes revealPop {
+      0%   { transform: scale(0.88); opacity: 0.4; }
+      100% { transform: scale(1);    opacity: 1; }
+    }
 
     /* Toast message */
     .toast {
@@ -313,13 +376,27 @@
       </div>
     </div>
 
+    <div class="speed-bar">
+      <span>🐢</span>
+      <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+      <span>🐇</span>
+      <span class="speed-label" id="speedLabel">보통</span>
+    </div>
+
     <div class="control-bar">
       <button class="btn btn-primary" id="startGameBtn">🎮 게임 시작</button>
       <button class="btn btn-secondary" id="resetGameBtn">초기화</button>
     </div>
 
     <div class="results-section" id="resultsSection" style="display:none;">
-      <h2>⭐ 게임 결과</h2>
+      <div class="results-header">
+        <h2>⭐ 게임 결과</h2>
+        <div class="results-actions">
+          <button class="btn-icon" id="revealModeBtn">🙈 순차 공개</button>
+          <button class="btn-icon" id="copyResultBtn">📋 복사</button>
+        </div>
+      </div>
+      <div class="results-hint" id="resultsHint" style="display:none;">카드를 클릭하면 결과가 공개됩니다</div>
       <div class="results-grid" id="resultsList"></div>
     </div>
   </div>
@@ -344,6 +421,8 @@
     let animationId = null;
     let dragSrcIndex = null;
     let dragType = null;
+    let revealMode = false;
+    let lastPaths = null;
 
     // ─── Canvas ──────────────────────────────────────────────────
     const canvas = document.getElementById('ladderCanvas');
@@ -583,11 +662,22 @@
       ctx.fill();
     }
 
+    // ─── Speed ───────────────────────────────────────────────────
+    const SPEED_MAP = { 1: 2, 2: 4, 3: 7, 4: 12, 5: 22 };
+    const SPEED_NAMES = { 1: '매우 느리게', 2: '느리게', 3: '보통', 4: '빠르게', 5: '매우 빠르게' };
+    const speedSlider = document.getElementById('speedSlider');
+    const speedLabel  = document.getElementById('speedLabel');
+    speedSlider.addEventListener('input', () => {
+      speedLabel.textContent = SPEED_NAMES[speedSlider.value];
+    });
+
+    function getSpeed() { return SPEED_MAP[speedSlider.value]; }
+
     function animatePaths(paths) {
       cancelAnimationFrame(animationId);
+      lastPaths = paths;
       const pos = paths.map(p => ({ x: p[0].x, y: p[0].y }));
       const idx  = Array(players.length).fill(0);
-      const speed = 5;
       const btns = getAllBtns();
 
       document.getElementById('resultsList').innerHTML = '';
@@ -595,6 +685,7 @@
       btns.forEach(b => b.disabled = true);
 
       (function step() {
+        const speed = getSpeed();
         drawStaticLadder();
         let done = true;
 
@@ -617,24 +708,67 @@
     }
 
     // ─── Results ─────────────────────────────────────────────────
-    function displayResults(paths) {
+    function calcResultData(paths) {
       const { gapX } = getLadderMetrics();
-      const list = document.getElementById('resultsList');
-      list.innerHTML = '';
-      document.getElementById('resultsSection').style.display = 'block';
-
-      players.forEach((name, i) => {
+      return players.map((name, i) => {
         const finalX = paths[i][paths[i].length - 1].x;
         let col = Math.round(finalX / gapX) - 1;
         col = Math.max(0, Math.min(col, outcomes.length - 1));
-
-        const el = document.createElement('div');
-        el.className = 'result-item';
-        el.style.borderLeftColor = COLORS[i % COLORS.length];
-        el.innerHTML = `<strong style="color:${COLORS[i%COLORS.length]}">${name}</strong><span>→ ${outcomes[col]}</span>`;
-        list.appendChild(el);
+        return { name, outcome: outcomes[col], color: COLORS[i % COLORS.length] };
       });
     }
+
+    function displayResults(paths) {
+      const list = document.getElementById('resultsSection');
+      const grid = document.getElementById('resultsList');
+      const hint = document.getElementById('resultsHint');
+      grid.innerHTML = '';
+      list.style.display = 'block';
+
+      const data = calcResultData(paths);
+
+      data.forEach((d, i) => {
+        const el = document.createElement('div');
+        el.className = 'result-item' + (revealMode ? ' hidden-result' : '');
+        el.style.borderLeftColor = d.color;
+        el.innerHTML = `<strong style="color:${d.color}">${d.name}</strong><span>→ ${d.outcome}</span>`;
+
+        if (revealMode) {
+          el.addEventListener('click', () => {
+            if (!el.classList.contains('hidden-result')) return;
+            el.classList.remove('hidden-result');
+            el.classList.add('reveal-anim');
+            // 모두 공개되면 힌트 숨김
+            if (!grid.querySelector('.hidden-result')) hint.style.display = 'none';
+          });
+        }
+        grid.appendChild(el);
+      });
+
+      hint.style.display = revealMode ? 'block' : 'none';
+    }
+
+    // ─── Reveal Mode Toggle ──────────────────────────────────────
+    document.getElementById('revealModeBtn').addEventListener('click', () => {
+      revealMode = !revealMode;
+      const btn = document.getElementById('revealModeBtn');
+      btn.textContent = revealMode ? '👁 전체 공개' : '🙈 순차 공개';
+      btn.style.color = revealMode ? 'var(--neon-green)' : '';
+      btn.style.borderColor = revealMode ? 'rgba(0,200,100,0.4)' : '';
+      if (lastPaths) displayResults(lastPaths);
+    });
+
+    // ─── Copy Results ────────────────────────────────────────────
+    document.getElementById('copyResultBtn').addEventListener('click', () => {
+      if (!lastPaths) { showToast('먼저 게임을 실행해주세요'); return; }
+      const data = calcResultData(lastPaths);
+      const text = data.map(d => `${d.name} → ${d.outcome}`).join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('결과가 복사됐습니다!', 'success');
+      }).catch(() => {
+        showToast('복사에 실패했습니다');
+      });
+    });
 
     // ─── Cards Rendering ─────────────────────────────────────────
     function renderCards() {
@@ -777,6 +911,12 @@
       cancelAnimationFrame(animationId);
       players  = ['김민준', '이서연', '박지호', '최예은', '정승우'];
       outcomes = ['1번', '2번', '3번', '4번', '5번'];
+      lastPaths = null;
+      revealMode = false;
+      const revealBtn = document.getElementById('revealModeBtn');
+      revealBtn.textContent = '🙈 순차 공개';
+      revealBtn.style.color = '';
+      revealBtn.style.borderColor = '';
       generateLadder();
       renderCards();
       drawStaticLadder();
