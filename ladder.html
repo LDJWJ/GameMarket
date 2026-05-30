@@ -300,15 +300,14 @@
       color: var(--text-muted); text-transform: uppercase;
     }
     .result-item .result-name {
-      font-size: 1.05rem; font-weight: 700;
-      line-height: 1.2;
+      font-size: 0.95rem; font-weight: 700;
+      line-height: 1.2; color: var(--text);
     }
     .result-item .result-arrow {
-      font-size: 0.75rem; color: var(--text-muted);
+      font-size: 0.7rem; color: var(--text-muted);
     }
     .result-item .result-outcome {
-      font-size: 1.25rem; font-weight: 900;
-      font-family: var(--font-title);
+      font-size: 1.1rem; font-weight: 700;
       line-height: 1.2;
     }
     @keyframes cardIn {
@@ -439,6 +438,7 @@
   <script>
     // ─── Constants ───────────────────────────────────────────────
     const RESULTS_SESSION_KEY = 'ladderResults';
+    const NAMES_SESSION_KEY   = 'ladderNames';
     const COLORS = [
       '#00ff87','#ff006e','#0099ff','#ffbe0b',
       '#fb5607','#a855f7','#3a86ff','#ff99c8',
@@ -772,7 +772,7 @@
         if (animate) el.style.animationDelay = `${i * 80}ms`;
         el.innerHTML = `
           <div class="result-rank"># ${i + 1}</div>
-          <div class="result-name" style="color:${d.color}">${d.name}</div>
+          <div class="result-name">${d.name}</div>
           <div class="result-arrow">▼</div>
           <div class="result-outcome" style="color:${d.color}">${d.outcome}</div>
         `;
@@ -821,6 +821,10 @@
     });
 
     // ─── Cards Rendering ─────────────────────────────────────────
+    function saveNamesToSession() {
+      sessionStorage.setItem(NAMES_SESSION_KEY, JSON.stringify({ players, outcomes }));
+    }
+
     function renderCards() {
       renderList('playersList',  players,  'player');
       renderList('outcomesList', outcomes, 'outcome');
@@ -829,6 +833,7 @@
       document.getElementById('addPlayerBtn').disabled  = players.length  >= MAX_COUNT;
       document.getElementById('addOutcomeBtn').disabled = outcomes.length >= MAX_COUNT;
       updateCountStatus();
+      saveNamesToSession();
     }
 
     function renderList(containerId, arr, type) {
@@ -852,6 +857,7 @@
           arr[i] = e.target.value;
           drawStaticLadder();
           updateCountStatus();
+          saveNamesToSession();
         });
 
         card.querySelector('.card-remove').addEventListener('click', () => {
@@ -1003,6 +1009,12 @@
     window.addEventListener('load', () => {
       applyTheme();
       resizeCanvas();
+      const savedNames = sessionStorage.getItem(NAMES_SESSION_KEY);
+      if (savedNames) {
+        const parsed = JSON.parse(savedNames);
+        players  = parsed.players;
+        outcomes = parsed.outcomes;
+      }
       generateLadder();
       renderCards();
       document.fonts.ready.then(() => {
