@@ -246,16 +246,22 @@
     /* Results */
     .results-section {
       background: var(--panel-bg); border: 1px solid var(--panel-border);
-      border-radius: var(--radius); padding: 20px;
+      border-radius: var(--radius); padding: 24px;
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 0 40px rgba(0,255,135,0.07), 0 0 80px rgba(0,153,255,0.04);
+      animation: sectionAppear 0.5s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes sectionAppear {
+      0%   { opacity: 0; transform: translateY(18px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
     .results-header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 20px;
     }
     .results-section h2 {
-      font-family: var(--font-title); font-size: 1.2rem;
-      background: linear-gradient(90deg, var(--neon-green), var(--neon-pink));
+      font-family: var(--font-title); font-size: 1.5rem;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-blue), var(--neon-pink));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .results-actions { display: flex; gap: 8px; align-items: center; }
@@ -267,37 +273,64 @@
     }
     .btn-icon:hover { color: var(--neon-green); border-color: rgba(0,200,100,0.4); }
     .results-hint {
-      font-size: 0.78rem; color: var(--text-muted);
-      text-align: center; margin-bottom: 12px;
+      font-size: 0.82rem; color: var(--text-muted);
+      text-align: center; margin-bottom: 16px;
       transition: opacity 0.3s;
     }
     .results-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
     }
     .result-item {
-      padding: 10px 14px; border-radius: 10px;
-      border-left: 3px solid;
+      padding: 16px 18px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-left: 4px solid;
       background: rgba(255,255,255,0.04);
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.88rem; gap: 8px;
+      display: flex; flex-direction: column; gap: 6px;
       transition: all 0.3s;
+      animation: cardIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
     }
-    .result-item span { color: var(--text-muted); font-size: 0.82rem; }
+    .result-item:hover {
+      background: rgba(255,255,255,0.07);
+      transform: translateY(-2px);
+    }
+    .result-item .result-rank {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+      color: var(--text-muted); text-transform: uppercase;
+    }
+    .result-item .result-name {
+      font-size: 1.05rem; font-weight: 700;
+      line-height: 1.2;
+    }
+    .result-item .result-arrow {
+      font-size: 0.75rem; color: var(--text-muted);
+    }
+    .result-item .result-outcome {
+      font-size: 1.25rem; font-weight: 900;
+      font-family: var(--font-title);
+      line-height: 1.2;
+    }
+    @keyframes cardIn {
+      0%   { opacity: 0; transform: scale(0.82) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
     /* 순차 공개 모드: 숨김 상태 */
     .result-item.hidden-result {
       cursor: pointer;
       background: rgba(255,255,255,0.02);
       border-left-color: rgba(255,255,255,0.15) !important;
+      border-color: rgba(255,255,255,0.06) !important;
     }
-    .result-item.hidden-result strong,
-    .result-item.hidden-result span { opacity: 0; }
+    .result-item.hidden-result .result-rank,
+    .result-item.hidden-result .result-name,
+    .result-item.hidden-result .result-arrow,
+    .result-item.hidden-result .result-outcome { opacity: 0; }
     .result-item.hidden-result::after {
       content: '클릭하여 공개';
       position: absolute; left: 50%; top: 50%;
       transform: translate(-50%, -50%);
-      font-size: 0.75rem; color: var(--text-muted);
+      font-size: 0.78rem; color: var(--text-muted);
       white-space: nowrap; pointer-events: none;
     }
     .result-item.hidden-result { position: relative; }
@@ -731,14 +764,19 @@
         const el = document.createElement('div');
         el.className = 'result-item' + (revealMode ? ' hidden-result' : '');
         el.style.borderLeftColor = d.color;
-        el.innerHTML = `<strong style="color:${d.color}">${d.name}</strong><span>→ ${d.outcome}</span>`;
+        el.style.animationDelay = `${i * 80}ms`;
+        el.innerHTML = `
+          <div class="result-rank"># ${i + 1}</div>
+          <div class="result-name" style="color:${d.color}">${d.name}</div>
+          <div class="result-arrow">▼</div>
+          <div class="result-outcome" style="color:${d.color}">${d.outcome}</div>
+        `;
 
         if (revealMode) {
           el.addEventListener('click', () => {
             if (!el.classList.contains('hidden-result')) return;
             el.classList.remove('hidden-result');
             el.classList.add('reveal-anim');
-            // 모두 공개되면 힌트 숨김
             if (!grid.querySelector('.hidden-result')) hint.style.display = 'none';
           });
         }
@@ -746,6 +784,11 @@
       });
 
       hint.style.display = revealMode ? 'block' : 'none';
+
+      // 결과 섹션으로 자동 스크롤
+      setTimeout(() => {
+        list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
     }
 
     // ─── Reveal Mode Toggle ──────────────────────────────────────
@@ -959,9 +1002,7 @@
 
     window.addEventListener('resize', () => {
       resizeCanvas();
-      generateLadder();
       drawStaticLadder();
-      document.getElementById('resultsSection').style.display = 'none';
     });
   </script>
 </body>
