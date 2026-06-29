@@ -19,28 +19,28 @@ body {
 .hub-header {
     text-align: center;
     color: white;
-    padding: 40px 20px;
-    margin-bottom: 40px;
+    padding: 24px 20px;
+    margin-bottom: 24px;
 }
 
 .hub-header h1 {
-    font-size: 3.5rem;
+    font-size: 2.6rem;
     font-weight: bold;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .hub-header p {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     opacity: 0.95;
 }
 
 .games-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 20px;
     padding: 0 20px;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
 }
 
 .game-card {
@@ -66,7 +66,7 @@ body {
 }
 
 .game-card-inner {
-    padding: 30px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -74,10 +74,10 @@ body {
 }
 
 .game-icon {
-    width: 120px;
-    height: 120px;
+    width: 88px;
+    height: 88px;
     border-radius: 50%;
-    margin-bottom: 25px;
+    margin-bottom: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -107,8 +107,8 @@ body {
 }
 
 .icon-circle.player-color {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     background: white;
     top: 50%;
     left: 50%;
@@ -116,16 +116,16 @@ body {
 }
 
 .icon-circle.enemy-color {
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     top: 20%;
     right: 20%;
 }
 
 .icon-circle.collectible-color {
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     bottom: 20%;
     left: 20%;
@@ -324,7 +324,7 @@ body {
 }
 
 .mole-icon {
-    font-size: 4rem;
+    font-size: 2.8rem;
     animation: moleBounce 1.5s ease-in-out infinite;
 }
 
@@ -341,27 +341,27 @@ body {
 }
 
 .praise-icon {
-    font-size: 4rem;
+    font-size: 2.8rem;
 }
 
 .game-card h2 {
-    font-size: 1.8rem;
-    margin-bottom: 15px;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
     color: #333;
 }
 
 .game-description {
-    font-size: 1rem;
+    font-size: 0.88rem;
     color: #666;
-    margin-bottom: 20px;
-    line-height: 1.6;
-    min-height: 50px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+    min-height: 40px;
 }
 
 .game-stats {
     display: flex;
-    gap: 10px;
-    margin-bottom: 25px;
+    gap: 8px;
+    margin-bottom: 18px;
     flex-wrap: wrap;
     justify-content: center;
 }
@@ -369,9 +369,9 @@ body {
 .stat {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 6px 14px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 600;
 }
 
@@ -381,12 +381,12 @@ body {
 
 .play-btn {
     display: inline-block;
-    padding: 14px 40px;
+    padding: 10px 30px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     text-decoration: none;
     border-radius: 30px;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     transition: all 0.3s ease;
     border: none;
@@ -423,25 +423,6 @@ body {
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .hub-header h1 {
-        font-size: 2.5rem;
-    }
-
-    .hub-header p {
-        font-size: 1.1rem;
-    }
-
-    .games-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-
-    .game-card h2 {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .hub-header h1 {
         font-size: 2rem;
     }
 
@@ -449,23 +430,46 @@ body {
         font-size: 1rem;
     }
 
+    .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .game-card h2 {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hub-header h1 {
+        font-size: 1.7rem;
+    }
+
+    .hub-header p {
+        font-size: 0.9rem;
+    }
+
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+
     .game-icon {
-        width: 100px;
-        height: 100px;
+        width: 72px;
+        height: 72px;
     }
 
     .icon-circle.player-color {
-        width: 30px;
-        height: 30px;
+        width: 22px;
+        height: 22px;
     }
 
     .icon-circle.enemy-color {
-        width: 24px;
-        height: 24px;
+        width: 16px;
+        height: 16px;
     }
 
     .icon-circle.collectible-color {
-        width: 16px;
-        height: 16px;
+        width: 11px;
+        height: 11px;
     }
 }
