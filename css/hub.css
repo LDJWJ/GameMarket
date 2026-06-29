@@ -313,6 +313,26 @@ body {
     font-weight: bold;
 }
 
+.game-icon.mole-game {
+    background: linear-gradient(135deg, #4a7c59 0%, #2d5a3d 100%);
+    animation: moleGlow 2s ease-in-out infinite;
+}
+
+@keyframes moleGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(74, 124, 89, 0.3); }
+    50%       { box-shadow: 0 0 40px rgba(74, 124, 89, 0.7); }
+}
+
+.mole-icon {
+    font-size: 4rem;
+    animation: moleBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes moleBounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-10px); }
+}
+
 .game-icon.praise-game {
     background: linear-gradient(135deg, #ff9a9e 0%, #c9b8e8 100%);
     display: flex;

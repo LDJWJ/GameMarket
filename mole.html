@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>두더지 잡기 - 게임 허브</title>
+    <link rel="stylesheet" href="css/mole.css">
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">← 게임 허브</a>
+
+    <h1 class="game-title">🔨 두더지 잡기 🐹</h1>
+
+    <!-- 점수판 -->
+    <div class="score-board" id="scoreboard">
+        <div class="score-box level-box">
+            <div class="label">레벨</div>
+            <div class="value" id="level-value">1</div>
+        </div>
+        <div class="score-box score-box-main" id="score-box">
+            <div class="label">점수</div>
+            <div class="value" id="score-value">0</div>
+        </div>
+        <div class="score-box timer-box" id="timer-box">
+            <div class="label">남은 시간</div>
+            <div class="value" id="timer-value">30초</div>
+        </div>
+        <div class="score-box difficulty-box">
+            <div class="label">난이도</div>
+            <div class="value" id="difficulty-value">보통</div>
+        </div>
+    </div>
+
+    <!-- 게임 보드 -->
+    <div class="game-board">
+        <div class="holes-grid" id="holes-grid"></div>
+    </div>
+
+    <!-- 난이도 선택 -->
+    <div class="difficulty-section" id="difficulty-section">
+        <p class="difficulty-label">난이도 선택</p>
+        <div class="difficulty-buttons">
+            <button class="diff-btn" data-difficulty="easy">🐢 쉬움</button>
+            <button class="diff-btn active" data-difficulty="normal">🐰 보통</button>
+            <button class="diff-btn" data-difficulty="hard">🚀 어려움</button>
+        </div>
+    </div>
+
+    <!-- 게임 시작 버튼 -->
+    <button class="start-btn" id="start-btn">게임 시작 🎮</button>
+
+    <!-- 게임 중 안내 -->
+    <p class="hint-text" id="hint-text">두더지를 클릭하세요! 🎯</p>
+
+    <!-- 게임 오버 모달 -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon">🎮</div>
+            <h2>게임 종료!</h2>
+            <div class="modal-tags">
+                <span class="modal-tag difficulty-tag" id="modal-difficulty">보통</span>
+                <span class="modal-tag level-tag" id="modal-level">레벨 1</span>
+            </div>
+            <p class="modal-final-score">최종 점수: <span id="modal-score">0점</span></p>
+            <p class="modal-message" id="modal-message"></p>
+            <button class="modal-restart-btn" id="modal-restart-btn">다시 시작 🔄</button>
+        </div>
+    </div>
+
+    <script src="js/mole.js"></script>
+</body>
+</html>
